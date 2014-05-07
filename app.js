@@ -11,6 +11,7 @@ var express = require('express');
 var https = require('https');
 var http = require('http');
 var fs = require('fs');
+var _ = require('lodash');
 
 var config = require('./config');
 var app = express();
@@ -76,9 +77,22 @@ function kibana3configjs(req, res) {
     }
   }
 
+  function getKibanaRoute() {
+
+      var user = req.user;
+
+      var roleFound = _.find(config.roles, function(obj){
+          if (_.contains(obj.users, user)) return obj;
+      });
+
+      if(roleFound) return roleFound.default_route;
+
+      return '/dashboard/file/blank.json';
+  }
+
   res.setHeader('Content-Type', 'application/javascript');
   res.end("define(['settings'], " +
-    "function (Settings) {'use strict'; return new Settings({elasticsearch: '/__es', default_route     : '/dashboard/file/default.json'," +
+    "function (Settings) {'use strict'; return new Settings({elasticsearch: '/__es', default_route : '" + getKibanaRoute() + "'," +
       "kibana_index: '" +
       getKibanaIndex() +
       "', panel_names: ['histogram', 'map', 'pie', 'table', 'filtering', 'timepicker', 'text', 'hits', 'column', 'trends', 'bettermap', 'query', 'terms', 'sparklines'] }); });");
