@@ -79,7 +79,16 @@ function kibana3configjs(req, res) {
 
   function getKibanaRoute() {
 
-      var user = req.user;
+      var user;
+
+      if(config.enable_basic_auth){
+          user = req.user;
+      }
+
+      if(config.enable_google_oauth){
+          if(req.googleOauth.emails.length > 0)
+            user = req.googleOauth.emails[0].value;
+      }
 
       var roleFound = _.find(config.roles, function(obj){
           if (_.contains(obj.users, user)) return obj;
